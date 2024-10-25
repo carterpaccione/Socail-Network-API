@@ -1,21 +1,22 @@
 import { Request, Response } from 'express';
 import User from '../models/User.js';
+import Thought from '../models/Thought.js';
 
 // GET all users
 // Messing around with poopulate() method to include thoughts and friends data with specific fields.
 
 const getAllUsers = async (_req: Request, res: Response) => {
     try {
-        const userData = await User.find()
-        .select('-__v')
-        .populate({
-            path: 'thoughts',
-            select: '_id thoughtText'
-        })
-        .populate({
-            path: 'friends',
-            select: '_id username'
-        });
+        const userData = await User.find().populate('thoughts').populate ({ path: 'friends', select: '_id username' });
+        // .select('-__v')
+        // .populate({
+        //     path: 'thoughts',
+        //     select: '_id thoughtText reactionCount'
+        // })
+        // .populate({
+        //     path: 'friends',
+        //     select: '_id username'
+        // }); wasnt showing the reaction count for some reason
         res.json(userData);
     } catch (err: any) {
         res.status(400).json({message: err.message });
@@ -68,18 +69,20 @@ const updateUser = async (req: Request, res: Response) => {
     }
 };
 
-// DELETE to remove user by ID
+// DELETE to remove user by ID and all associated thoughts
 
 const deleteUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
-        const user = await User.findByIdAndDelete(id);
-        if (!user) {
+        const userInfo = await User.findById(id);
+        if (!userInfo) {
             res.status(404).json({ message: 'No user found with this ID!' });
             return;
         }
-        res.json({ message: `User: ${user.username} successfully deleted!` });
-
+        const username = userInfo.username;
+        await User.findByIdAndDelete(id);
+        await Thought.deleteMany({ username: username });
+        res.json({ message: `User: ${username} and thoughts successfully deleted!` });
     } catch (err: any) {
         res.status(400).json({ message: err.message });
     }
