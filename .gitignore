@@ -73,3 +73,6 @@ yarn.lock
 
 # React practice app
 00-practice-app
+
+# Ignore dist folder
+dist/
