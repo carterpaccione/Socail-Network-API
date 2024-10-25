@@ -71,4 +71,54 @@ const deleteThought = async (req: Request, res: Response) => {
     }
 };
 
-export { getAllThoughts, getThoughtById, createThought, updateThoughtById, deleteThought };
+// POST reaction to a thought
+
+const createReaction = async (req: Request, res: Response) => {
+    const { thoughtId } = req.params;
+    const { reactionBody, username } = req.body;
+    try {
+        const updatedThought = await Thought.findByIdAndUpdate(
+            thoughtId,
+            {
+                $push: {reactions: { reactionBody, username }}
+            },
+            { runValidators: true, new: true }
+        )
+
+        if (!updatedThought) {
+            res.status(404).json({ message: 'No thought found with this ID!' });
+            return;
+        }
+        res.json(updatedThought);
+    } catch (err: any) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+// DELETE reaction from a thought
+
+const deleteReaction = async (req: Request, res: Response) => {
+    const { thoughtId } = req.params;
+    const { reactionId } = req.body;
+
+    try {
+        const updatedThought = await Thought.findByIdAndUpdate(
+            { _id: thoughtId },
+            { $pull: { reactions: { _id: reactionId } } },
+            { runValidators: true, new: true }
+        )
+        res.json(updatedThought);
+    } catch (err: any) {
+        res.status(400).json({ message: err.message});
+    }
+};
+
+export {
+    getAllThoughts,
+    getThoughtById,
+    createThought,
+    updateThoughtById,
+    deleteThought,
+    createReaction,
+    deleteReaction
+};
