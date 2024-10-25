@@ -27,11 +27,19 @@ const getThoughtById = async (req: Request, res: Response) => {
 // POST a new thought
 
 const createThought = async (req: Request, res: Response) => {
-    const { thoughtText, username, userID } = req.body;
+    const { thoughtText, username, userId } = req.body;
     try {
         const thoughtData = await Thought.create({ thoughtText, username });
-        await User.findByIdAndUpdate(userID, { $push: { thoughts: thoughtData._id } });
-        res.json(thoughtData);
+        const updatedUser = await User.findByIdAndUpdate(
+            userId, 
+            { $push: { thoughts: thoughtData._id } },
+            { runValidators: true, new: true }
+        );
+        if (!updatedUser) {
+            res.status(404).json({ message: 'No user found with this ID!' });
+            return;
+        }
+        res.json({ message: `${thoughtData._id} has been created by user ${updatedUser?.username}` });
     } catch (err: any) {
         res.status(400).json({ message: err.message });
     }
@@ -46,7 +54,7 @@ const updateThoughtById = async (req: Request, res: Response) => {
     try {
         const thoughtData = await Thought.findByIdAndUpdate(
             { _id: id },
-            { $set: thoughtText },
+            { $set: { thoughtText: thoughtText }},
             { runValidators: true, new: true },
         )
         res.json(thoughtData);
@@ -66,6 +74,14 @@ const deleteThought = async (req: Request, res: Response) => {
             res.status(404).json({ message: 'No thought found with this ID!' });
             return;
         }
+
+        await User.updateOne(
+            { thoughts: thought._id },
+            { $pull: { thoughts: thought._id } },
+            { runValidators: true, new: true }
+        );
+
+        res.json(`Thought, ${thought._id}, has been deleted!`);
     } catch (err: any) {
         res.status(400).json({ message: err.message });
     }

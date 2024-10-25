@@ -8,7 +8,7 @@ interface IThought extends Document {
     reactions?: Schema.Types.ObjectId[];
 }
 
-const thoughtSchema = new Schema<IThought>(
+export const thoughtSchema = new Schema<IThought>(
     {
         thoughtText: {
             type: String,
