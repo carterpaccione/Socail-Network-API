@@ -20,7 +20,7 @@ Open the terminal and run "npm i", "npm run build", using your own database conf
 
 /api/users:
 GET - to get all users
-POST - example:{ "username": "username", "email": "email"} - to create a user
+POST - example: { "username": "username", "email": "email"} - to create a user
 
 /api/users/:id
 GET - to get a user by id
